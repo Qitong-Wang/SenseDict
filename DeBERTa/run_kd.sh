@@ -83,6 +83,19 @@ case $task in
     ;;
 
 esac
+# Train the teacher model first
+python a0a_run_teachermodel.py \
+--model_config ./experiments/glue/config.json  \
+--tag deberta-v3-large \
+--do_train \
+--task_name $task \
+--data_dir ./glue/$task \
+--init_model deberta-v3-large \
+--output_dir ./ckpts/teacher-v3-large/$task   \
+$parameters 
+
+
+
 # Modify the checkpoints of fine-tuned DeBERTa model.
 case $task in
   CoLA)
@@ -150,12 +163,12 @@ torchrun  --nnodes=1 --nproc_per_node=5  a3_traincluster_evalmulti.py  --json_pa
 # Evaluation
 python a0b_run_studentmodel.py \
 --model_config ./experiments/glue/config.json  \
---tag deberta-v3-large \
+--tag deberta-v3-xsmall \
 --do_eval \
 --task_name $task \
 --data_dir ./glue/$task \
---init_model deberta-v3-large \
---output_dir ./results/student-v3-large/$task   \
+--init_model deberta-v3-xsmall \
+--output_dir ./results/student-v3-xsmall/$task   \
 $parameters \
 --student_ckpt_path "./ckpts/train_student/$2/""$task""_14.ckpt" \
 --cluster_path "./resources/wiki_""$task"".kmeanspkl"
